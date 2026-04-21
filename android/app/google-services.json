@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "922413606400",
+    "project_id": "geotrack-appp",
+    "storage_bucket": "geotrack-appp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922413606400:android:d6ceceb9243dcd5b94dae5",
+        "android_client_info": {
+          "package_name": "com.example.geotrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkyYTM4I2WyhVLSmblIf8sDwID68wkKNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
