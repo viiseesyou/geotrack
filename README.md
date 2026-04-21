@@ -1,17 +1,31 @@
-# geotrack
+# GeoTrack
 
-A new Flutter project.
+Мобильное приложение для конфиденциального обмена геолокационными данными.
 
-## Getting Started
+## Описание
+GeoTrack — кроссплатформенное мобильное приложение (iOS/Android) для безопасного обмена геолокацией между близкими людьми с шифрованием данных на стороне клиента.
 
-This project is a starting point for a Flutter application.
+## Технологии
+- Flutter + Dart
+- Firebase Authentication
+- Cloud Firestore
+- OpenStreetMap (flutter_map)
+- AES-256 шифрование
 
-A few resources to get you started if this is your first Flutter project:
+## Функционал
+- Регистрация и аутентификация пользователей
+- Интерактивная карта с геолокацией в реальном времени
+- Система групп с кодом приглашения
+- Шифрование координат алгоритмом AES-256
+- Настройки конфиденциальности
+- Режим родителя
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Запуск
+```bash
+flutter pub get
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Автор
+Рябова Виктория Владимировна, группа 4013
+Университет Дубна, 2026
