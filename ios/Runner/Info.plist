@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>GeoTrack использует геолокацию в фоне чтобы участники группы видели ваше местоположение</string>
+	<key>UIBackgroundModes</key>
+	<array>
+    	<string>location</string>
+    	<string>fetch</string>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>GeoTrack использует геолокацию для отображения вашего положения на карте</string>
 	<key>NSLocationAlwaysUsageDescription</key>

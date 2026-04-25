@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geolocator_apple/geolocator_apple.dart';
 import 'encryption_service.dart';
 
 class LocationService {
@@ -9,7 +10,6 @@ class LocationService {
   static StreamSubscription<Position>? _positionStream;
   static String? _groupKey;
 
-  // Получить ключ группы для текущего пользователя
   static Future<String?> getGroupKey() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
@@ -39,7 +39,11 @@ class LocationService {
       if (permission == LocationPermission.denied) return;
     }
 
-    // Получаем ключ группы
+    // Запрашиваем разрешение "всегда" для фонового режима
+    if (permission == LocationPermission.whileInUse) {
+      permission = await Geolocator.requestPermission();
+    }
+
     _groupKey = await getGroupKey();
 
     await _firestore.collection('users').doc(user.uid).set({
@@ -51,30 +55,39 @@ class LocationService {
       'lastSeen': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
-    _positionStream = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
-    ).listen((Position position) async {
-      if (_groupKey != null) {
-        // Шифруем с уникальным IV для каждого обновления
-        final encLat = EncryptionService.encryptCoordinate(
-            position.latitude, _groupKey!);
-        final encLng = EncryptionService.encryptCoordinate(
-            position.longitude, _groupKey!);
+    // Настройки для фоновой геолокации iOS
+    final locationSettings = AppleSettings(
+      accuracy: LocationAccuracy.high,
+      activityType: ActivityType.other,
+      distanceFilter: 10,
+      pauseLocationUpdatesAutomatically: false,
+      // Показывает синюю полоску когда приложение в фоне
+      showBackgroundLocationIndicator: true,
+    );
 
-        await _firestore.collection('users').doc(user.uid).update({
-          'lat_data': encLat['data'],
-          'lat_iv': encLat['iv'],
-          'lng_data': encLng['data'],
-          'lng_iv': encLng['iv'],
-          'latitude': null,
-          'longitude': null,
-          'lastSeen': FieldValue.serverTimestamp(),
-        });
-      }
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    ).listen((Position position) async {
+      await _updateLocation(position.latitude, position.longitude, user.uid);
     });
+  }
+
+  static Future<void> _updateLocation(
+      double lat, double lng, String uid) async {
+    if (_groupKey != null) {
+      final encLat = EncryptionService.encryptCoordinate(lat, _groupKey!);
+      final encLng = EncryptionService.encryptCoordinate(lng, _groupKey!);
+
+      await _firestore.collection('users').doc(uid).update({
+        'lat_data': encLat['data'],
+        'lat_iv': encLat['iv'],
+        'lng_data': encLng['data'],
+        'lng_iv': encLng['iv'],
+        'latitude': null,
+        'longitude': null,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
   static Future<void> stopTracking() async {

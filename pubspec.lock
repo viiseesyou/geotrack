@@ -289,7 +289,7 @@ packages:
     source: hosted
     version: "5.0.2"
   geolocator_apple:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: geolocator_apple
       sha256: dbdd8789d5aaf14cf69f74d4925ad1336b4433a6efdf2fce91e8955dc921bf22
