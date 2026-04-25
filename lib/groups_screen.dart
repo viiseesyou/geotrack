@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'encryption_service.dart';
+import 'geozones_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -282,10 +283,28 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             ),
                           ],
                         ),
-                        trailing: isOwner
-                            ? const Icon(Icons.star,
-                                color: Color(0xFFE9C46A))
-                            : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.location_searching,
+                                color: Color(0xFF6C63FF),
+                              ),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GeozonesScreen(
+                                    groupId: groups[index].id,
+                                    groupName: group['name'] ?? 'Группа',
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (isOwner)
+                              const Icon(Icons.star, color: Color(0xFFE9C46A)),
+                          ],
+                        ),
                       ),
                     );
                   },
