@@ -114,16 +114,10 @@ class _ParentScreenState extends State<ParentScreen> {
                           setState(() => _selectedChild = child);
                           if (child['latitude'] != null &&
                               child['longitude'] != null) {
-                            final lat = child['latitude'] is String
-                                ? EncryptionService.decryptCoordinate(
-                                    child['latitude'],
-                                  )
-                                : (child['latitude'] as num).toDouble();
-                            final lng = child['longitude'] is String
-                                ? EncryptionService.decryptCoordinate(
-                                    child['longitude'],
-                                  )
-                                : (child['longitude'] as num).toDouble();
+                            final lat =
+                                (child['latitude'] as num?)?.toDouble() ?? 0.0;
+                            final lng =
+                                (child['longitude'] as num?)?.toDouble() ?? 0.0;
                             _mapController.move(LatLng(lat, lng), 16);
                           }
                         },
@@ -218,14 +212,17 @@ class _ParentScreenState extends State<ParentScreen> {
                       if (snapshot.hasData) {
                         for (final doc in snapshot.data!.docs) {
                           final data = doc.data() as Map<String, dynamic>;
-                          final latRaw = data['latitude'];
-                          final lngRaw = data['longitude'];
-                          final lat = latRaw is String
-                              ? EncryptionService.decryptCoordinate(latRaw)
-                              : (latRaw as num?)?.toDouble();
-                          final lng = lngRaw is String
-                              ? EncryptionService.decryptCoordinate(lngRaw)
-                              : (lngRaw as num?)?.toDouble();
+                         double? lat;
+                          double? lng;
+                          if (data['lat_data'] != null &&
+                              data['lat_iv'] != null) {
+                            // новый формат пока без ключа группы в parent_screen
+                            lat = (data['latitude'] as num?)?.toDouble();
+                            lng = (data['longitude'] as num?)?.toDouble();
+                          } else {
+                            lat = (data['latitude'] as num?)?.toDouble();
+                            lng = (data['longitude'] as num?)?.toDouble();
+                          }
                           final name = data['name'] ?? 'Участник';
                           final isChild = _children
                               .any((c) => c['uid'] == doc.id);

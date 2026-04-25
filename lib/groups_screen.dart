@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'encryption_service.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -37,12 +38,19 @@ class _GroupsScreenState extends State<GroupsScreen> {
               if (nameController.text.trim().isEmpty) return;
               final user = _auth.currentUser!;
               final code = _generateCode();
+              final groupKey = EncryptionService.generateGroupKey();
+              final encryptedKeyForOwner = EncryptionService.encryptKeyForUser(
+                groupKey,
+                user.uid,
+              );
+
               await _firestore.collection('groups').add({
                 'name': nameController.text.trim(),
                 'code': code,
                 'ownerId': user.uid,
                 'members': [user.uid],
                 'createdAt': FieldValue.serverTimestamp(),
+                'keys': {user.uid: encryptedKeyForOwner},
               });
               if (mounted) Navigator.pop(context);
             },
@@ -96,7 +104,22 @@ class _GroupsScreenState extends State<GroupsScreen> {
               final members = List<String>.from(groupDoc['members']);
               if (!members.contains(user.uid)) {
                 members.add(user.uid);
-                await groupDoc.reference.update({'members': members});
+                final groupData = groupDoc.data() as Map<String, dynamic>;
+                final ownerId = groupData['ownerId'];
+                final ownerEncryptedKey = groupData['keys'][ownerId];
+                final groupKey = EncryptionService.decryptKeyForUser(
+                  ownerEncryptedKey,
+                  ownerId,
+                );
+                final encryptedKeyForUser = EncryptionService.encryptKeyForUser(
+                  groupKey,
+                  user.uid,
+                );
+
+                await groupDoc.reference.update({
+                  'members': members,
+                  'keys.${user.uid}': encryptedKeyForUser,
+                });
               }
               if (mounted) Navigator.pop(context);
             },

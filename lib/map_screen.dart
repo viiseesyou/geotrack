@@ -34,21 +34,46 @@ class _MapScreenState extends State<MapScreen> {
     super.dispose();
   }
 
-  void _listenToUsers() {
+  void _listenToUsers() async {
+    final groupKey = await LocationService.getGroupKey();
+
     LocationService.getUsersStream().listen((snapshot) {
       final markers = <Marker>[];
       for (final doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final latRaw = data['latitude'];
-        final lngRaw = data['longitude'];
-        final lat = latRaw is String
-            ? EncryptionService.decryptCoordinate(latRaw)
-            : (latRaw as num?)?.toDouble();
-        final lng = lngRaw is String
-            ? EncryptionService.decryptCoordinate(lngRaw)
-            : (lngRaw as num?)?.toDouble();
         final name = data['name'] ?? 'Пользователь';
-        if (lat != null && lng != null) {
+
+        double? lat;
+        double? lng;
+
+        // Новый формат — зашифрованные координаты с IV
+        if (data['lat_data'] != null &&
+            data['lat_iv'] != null &&
+            groupKey != null) {
+          lat = EncryptionService.decryptCoordinate(
+            data['lat_data'],
+            data['lat_iv'],
+            groupKey,
+          );
+          lng = EncryptionService.decryptCoordinate(
+            data['lng_data'],
+            data['lng_iv'],
+            groupKey,
+          );
+        }
+        // Старый формат для обратной совместимости
+        else if (data['latitude'] != null) {
+          final latRaw = data['latitude'];
+          final lngRaw = data['longitude'];
+          lat = latRaw is String
+              ? EncryptionService.decryptCoordinate(latRaw, '', '')
+              : (latRaw as num?)?.toDouble();
+          lng = lngRaw is String
+              ? EncryptionService.decryptCoordinate(lngRaw, '', '')
+              : (lngRaw as num?)?.toDouble();
+        }
+
+        if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
           markers.add(
             Marker(
               point: LatLng(lat, lng),
@@ -58,7 +83,9 @@ class _MapScreenState extends State<MapScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -66,18 +93,23 @@ class _MapScreenState extends State<MapScreen> {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.2),
                           blurRadius: 4,
-                        )
+                        ),
                       ],
                     ),
                     child: Text(
                       name,
                       style: const TextStyle(
-                          fontSize: 10, fontWeight: FontWeight.bold),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Icon(Icons.location_pin,
-                      color: Color(0xFF6C63FF), size: 36),
+                  const Icon(
+                    Icons.location_pin,
+                    color: Color(0xFF6C63FF),
+                    size: 36,
+                  ),
                 ],
               ),
             ),
@@ -87,6 +119,7 @@ class _MapScreenState extends State<MapScreen> {
       setState(() => _userMarkers = markers);
     });
   }
+  
 
   Future<void> _getCurrentLocation() async {
     try {

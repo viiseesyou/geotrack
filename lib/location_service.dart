@@ -7,6 +7,27 @@ import 'encryption_service.dart';
 class LocationService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static StreamSubscription<Position>? _positionStream;
+  static String? _groupKey;
+
+  // Получить ключ группы для текущего пользователя
+  static Future<String?> getGroupKey() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    final groups = await _firestore
+        .collection('groups')
+        .where('members', arrayContains: user.uid)
+        .get();
+
+    if (groups.docs.isEmpty) return null;
+
+    final groupData = groups.docs.first.data();
+    final keys = groupData['keys'] as Map<String, dynamic>?;
+    if (keys == null || !keys.containsKey(user.uid)) return null;
+
+    final encryptedKey = keys[user.uid] as String;
+    return EncryptionService.decryptKeyForUser(encryptedKey, user.uid);
+  }
 
   static Future<void> startTracking() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -17,6 +38,9 @@ class LocationService {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) return;
     }
+
+    // Получаем ключ группы
+    _groupKey = await getGroupKey();
 
     await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
@@ -33,11 +57,23 @@ class LocationService {
         distanceFilter: 10,
       ),
     ).listen((Position position) async {
-      await _firestore.collection('users').doc(user.uid).update({
-        'latitude': EncryptionService.encryptCoordinate(position.latitude),
-        'longitude': EncryptionService.encryptCoordinate(position.longitude),
-        'lastSeen': FieldValue.serverTimestamp(),
-      });
+      if (_groupKey != null) {
+        // Шифруем с уникальным IV для каждого обновления
+        final encLat = EncryptionService.encryptCoordinate(
+            position.latitude, _groupKey!);
+        final encLng = EncryptionService.encryptCoordinate(
+            position.longitude, _groupKey!);
+
+        await _firestore.collection('users').doc(user.uid).update({
+          'lat_data': encLat['data'],
+          'lat_iv': encLat['iv'],
+          'lng_data': encLng['data'],
+          'lng_iv': encLng['iv'],
+          'latitude': null,
+          'longitude': null,
+          'lastSeen': FieldValue.serverTimestamp(),
+        });
+      }
     });
   }
 
@@ -51,6 +87,7 @@ class LocationService {
     }
     _positionStream?.cancel();
     _positionStream = null;
+    _groupKey = null;
   }
 
   static Future<void> setVisibility(bool visible) async {
@@ -62,7 +99,6 @@ class LocationService {
     }
   }
 
-  // Получить участников групп пользователя
   static Future<List<String>> getGroupMemberIds() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return [];
