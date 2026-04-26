@@ -73,11 +73,15 @@ class LocationService {
   }
 
   static Future<void> _updateLocation(
-      double lat, double lng, String uid) async {
+    double lat,
+    double lng,
+    String uid,
+  ) async {
     if (_groupKey != null) {
       final encLat = EncryptionService.encryptCoordinate(lat, _groupKey!);
       final encLng = EncryptionService.encryptCoordinate(lng, _groupKey!);
 
+      // Обновляем текущую позицию
       await _firestore.collection('users').doc(uid).update({
         'lat_data': encLat['data'],
         'lat_iv': encLat['iv'],
@@ -87,8 +91,18 @@ class LocationService {
         'longitude': null,
         'lastSeen': FieldValue.serverTimestamp(),
       });
-    }
+
+    // Сохраняем в историю
+    await _firestore.collection('location_history').add({
+      'uid': uid,
+      'lat_data': encLat['data'],
+      'lat_iv': encLat['iv'],
+      'lng_data': encLng['data'],
+      'lng_iv': encLng['iv'],
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
+}
 
   static Future<void> stopTracking() async {
     final user = FirebaseAuth.instance.currentUser;

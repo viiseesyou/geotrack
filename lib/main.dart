@@ -8,6 +8,7 @@ import 'map_screen.dart';
 import 'groups_screen.dart';
 import 'privacy_screen.dart';
 import 'parent_screen.dart';
+import 'history_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -200,7 +201,8 @@ class DashboardTab extends StatelessWidget {
                 title: 'Моя геолокация',
                 subtitle: 'Поделитесь своим местоположением',
                 color: const Color(0xFF6C63FF),
-                onTap: () {},
+                onTap: () => Navigator.push(context,
+    MaterialPageRoute(builder: (_) => const HistoryScreen())),
               ),
               const SizedBox(height: 12),
               _buildCard(
