@@ -1,14 +1,12 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:latlong2/latlong.dart';
-import 'notification_service.dart';
 
 class Geozone {
   final String id;
   final String name;
   final LatLng center;
-  final double radius; // метры
+  final double radius;
   final String groupId;
   final String createdBy;
 
@@ -45,12 +43,10 @@ class GeozoneService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final Map<String, bool> _userZoneStatus = {};
 
-  // Создать геозону
   static Future<void> createGeozone(Geozone zone) async {
     await _firestore.collection('geozones').add(zone.toMap());
   }
 
-  // Получить геозоны группы
   static Stream<List<Geozone>> getGroupGeozones(String groupId) {
     return _firestore
         .collection('geozones')
@@ -61,12 +57,10 @@ class GeozoneService {
             .toList());
   }
 
-  // Удалить геозону
   static Future<void> deleteGeozone(String id) async {
     await _firestore.collection('geozones').doc(id).delete();
   }
 
-  // Проверить геозоны для координат участника
   static Future<void> checkGeozones({
     required String userId,
     required String userName,
@@ -89,31 +83,19 @@ class GeozoneService {
         continue;
       }
 
-      // Вошёл в зону
       if (!wasInside && isInside) {
         _userZoneStatus[key] = true;
-        await NotificationService.showGeozoneNotification(
-          personName: userName,
-          zoneName: zone.name,
-          isEntering: true,
-        );
-      }
-      // Вышел из зоны
-      else if (wasInside && !isInside) {
+        // TODO: уведомления когда войдёт в зону
+      } else if (wasInside && !isInside) {
         _userZoneStatus[key] = false;
-        await NotificationService.showGeozoneNotification(
-          personName: userName,
-          zoneName: zone.name,
-          isEntering: false,
-        );
+        // TODO: уведомления когда выйдет из зоны
       }
     }
   }
 
-  // Расстояние между точками в метрах (формула Haversine)
   static double _calculateDistance(
       double lat1, double lon1, double lat2, double lon2) {
-    const R = 6371000.0; // радиус Земли в метрах
+    const R = 6371000.0;
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
     final a = sin(dLat / 2) * sin(dLat / 2) +

@@ -85,10 +85,8 @@ class _GeozonesScreenState extends State<GeozonesScreen> {
                   createdBy: user.uid,
                 );
                 await GeozoneService.createGeozone(zone);
-                if (mounted) {
-                  Navigator.pop(context);
-                  setState(() => _selectedPoint = null);
-                }
+                Navigator.pop(context);
+                setState(() => _selectedPoint = null);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6C63FF),

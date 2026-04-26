@@ -8,12 +8,10 @@ import 'map_screen.dart';
 import 'groups_screen.dart';
 import 'privacy_screen.dart';
 import 'parent_screen.dart';
-import 'notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await NotificationService.initialize();
   runApp(const MyApp());
 }
 
