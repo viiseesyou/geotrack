@@ -11,10 +11,12 @@ import 'parent_screen.dart';
 import 'history_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'onboarding_screen.dart';
+import 'push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await PushNotificationService.initialize();
   runApp(const MyApp());
 }
 
