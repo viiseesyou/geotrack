@@ -35,22 +35,26 @@ class PushNotificationService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _firestore.collection('users').doc(user.uid).update({
-        'fcmToken': token,
-      });
-    }
-
-    // Обновляем токен если он изменился
-    _messaging.onTokenRefresh.listen((newToken) async {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        await _firestore.collection('users').doc(currentUser.uid).update({
-          'fcmToken': newToken,
+    try {
+      final token = await _messaging.getToken();
+      if (token != null) {
+        await _firestore.collection('users').doc(user.uid).update({
+          'fcmToken': token,
         });
       }
-    });
+
+      _messaging.onTokenRefresh.listen((newToken) async {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          await _firestore.collection('users').doc(currentUser.uid).update({
+            'fcmToken': newToken,
+          });
+        }
+      });
+    } catch (e) {
+      // Симулятор не поддерживает APNS — игнорируем
+      print('FCM token not available: $e');
+    }
   }
 
   // Отправить уведомление участнику группы через Firestore
