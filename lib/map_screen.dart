@@ -165,14 +165,30 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Карта'),
+        title: const Text(
+          'Карта',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF6C63FF),
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(_isTracking ? Icons.location_on : Icons.location_off),
-            tooltip: _isTracking ? 'Остановить' : 'Поделиться локацией',
-            onPressed: _toggleTracking,
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Icon(
+                  _isTracking
+                      ? Icons.location_on_rounded
+                      : Icons.location_off_rounded,
+                  key: ValueKey(_isTracking),
+                  color: _isTracking ? Colors.greenAccent : Colors.white70,
+                ),
+              ),
+              tooltip: _isTracking ? 'Остановить' : 'Поделиться локацией',
+              onPressed: _toggleTracking,
+            ),
           ),
         ],
       ),
@@ -223,39 +239,59 @@ class _MapScreenState extends State<MapScreen> {
                         MarkerLayer(markers: _userMarkers),
                       ],
                     ),
-                    if (_isTracking)
-                      Positioned(
-                        top: 16,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6C63FF),
-                              borderRadius: BorderRadius.circular(20),
+                if (_isTracking)
+                  Positioned(
+                    top: 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.circle,
-                                    color: Colors.greenAccent, size: 10),
-                                SizedBox(width: 8),
-                                Text('Геолокация активна',
-                                    style: TextStyle(color: Colors.white)),
-                              ],
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              color: Color(0xFF4ADE80),
+                              size: 10,
                             ),
-                          ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Геолокация активна',
+                              style: TextStyle(
+                                color: Color(0xFF1A1A2E),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                  ),
+              ],
+            ),
       floatingActionButton: _currentPosition != null
           ? FloatingActionButton(
-              backgroundColor: const Color(0xFF6C63FF),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF6C63FF),
+              elevation: 4,
               onPressed: () => _mapController.move(_currentPosition!, 15),
-              child: const Icon(Icons.my_location, color: Colors.white),
+              child: const Icon(Icons.my_location_rounded),
             )
           : null,
     );
